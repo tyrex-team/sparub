@@ -1,0 +1,75 @@
+          SPARUB = SPARQL UPDATE BENCHMARK
+          ================================
+
+> SPARUB: The Tyrex' benchmark dealing with the SPARQL UPDATE
+  recommendation of the W3C.
+
+> Version: 1.0
+
+Context
+-------
+
+Recently, the W3C extended the SPARQL syntax[2] --which is the RDF
+query language[1]-- with a new recommendation dealing with
+updates[3]. This extension provides new keywords to add of delete
+triples from a database using the classic SPARQL syntax.
+
+Such an evolution allows to build more realistic application for the
+semantic web. Indeed, the dynamicity of data is often part of the
+game. Thereby, instead of manually (or externally) modify the
+datasets, this extension offers a way to perform these changes
+internally.
+
+In the same time, parallely to the development of SPARQL evaluators
+and RDF stores, several RDF/SPARQL benchmarks have been published in
+order to rank the various solutions. According to the literature, each
+benchmark offers its own specifities; for instance, they are not
+focusing on the same SPARQL fragment… They are mostly twofold: first a
+dataset --which can be generated (usually deterministically) or
+extracted from real datasources-- second a set of queries. Most of
+them allow to compare evaluators and stores according to time
+performance metrics and sometimes take also in account the memory/disk
+footprint during the steps of computation (either loading or
+querying).
+
+Similarly to the extension of the SPARQL standard proposed by the W3C,
+we propose a tool which extends the already existing benchmarks in
+order to integrate updating routines in the test suites called SPARUB
+(SPARQL UPDATE Benchmark).
+
+Concept of SPARUB
+-----------------
+
+The idea of SPARUB is to extend all the existing RDF/SPARQL benchmarks
+i.e. keeping the already run test suite and giving new scenarios
+involving dynamicity of data. To do that, SPARUB takes as inputs an
+RDF dataset (N-Triples format to be easily parsed) and a list of
+SPARQL queries. It then returns a set of RDF files and a testing
+scenario (and also some logs…).
+
+Technically, SPARUB starts by analyzing the various SPARQL queries in
+order to list the used SPARQL keywords and thus having an idea of the
+benchmarked fragment. It then splits the input RDF file into pieces
+according (1) to statistics of the initial dataset and (2) to the
+various sub-fragment that can be extracted from the general tested
+one.
+
+License
+-------
+
+This project is under the CeCILL license[4].
+
+References
+----------
+
+[1] RDF <https://www.w3.org/TR/2004/REC-rdf-primer-20040210/>
+[2] SPARQL 1.1 <https://www.w3.org/TR/sparql11-query/>
+[3] SPARQL UPDATE <https://www.w3.org/TR/sparql11-update/>
+[4] CeCILL license <http://www.cecill.info/index.en.html>
+
+Contributor
+-----------
+
+Damien Graux
+Tyrex Team, Inria (France)
+<http://tyrex.inria.fr>
