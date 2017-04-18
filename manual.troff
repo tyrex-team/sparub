@@ -1,0 +1,85 @@
+.TH SPARUB 1 "APRIL 2017" "version 1.0"
+
+
+.SH NAME
+sparub \- generate a benchmark dedicated to SPARQL UPDATE
+
+
+.SH SYNOPSIS
+.B sparub [\-h \-p] [\fB\-\-max\-triple\-number\fR \fIBITS\fB]
+.IR dataset_file
+.B [
+.IR query_file 
+.B ... ]
+
+
+.SH DESCRIPTION
+.B sparub
+extends all the existing RDF/SPARQL benchmarks i.e. keeping the
+already run test suite and giving new scenarios involving dynamicity
+of data. To do that, sparub takes as inputs an RDF dataset (N\-Triples
+format to be easily parsed) and an optional list of SPARQL queries. It
+then returns a set of RDF files and a testing scenario (and also some
+logs...) in a dedicated directory.
+
+
+.SH OPTIONS
+.IP "\-h , \-\-help"
+Print the help and exit.
+
+.IP "\-p , \-\-print\-query"
+Print one by one the generated queries at the end of the process,
+limiting the diplay to the 10th first lines.
+
+.IP "\-\-max\-triple\-number BITS"
+Set the maximum number of triples that will be involved in the step
+dealing with the tradeoff between updating the base and re-loading
+everything.
+.br
+The default value is set at 10'000.
+.br
+If the given number is larger than the dataset size, it will be
+reduced to that number.
+
+
+.SH FILES
+.B sparub
+outputs its generated scenario into the
+.I "./sparub\-benchmark/"
+directory. It is created if it does not exist and will be located
+where the generator is called. More specifically, this directory will
+contain the benchmark detailed scenario in 
+.I "sparub-process.txt"
+and also several types of files: the SPARQL queries in
+.I "*.rq"
+, the samples of dataset
+.I "dataset*.nt"
+and the 
+.I "triples*.nt"
+which are lists of possible solutions corresponding to the SPARQL
+queries that might have been given as arguments.
+
+
+.SH WARNING
+.B sparub
+needs at least 1'000 triples in the initial file. Otherwise, it
+considers that no relevant scenario can be generated and thus does
+nothing.
+
+
+.SH EXAMPLES
+
+For instance, launch
+.B sparub
+as follows:
+.in +.5in
+>bash sparub.sh ntriples_file sparql_query_1 sparql_query_2
+.in
+
+
+.SH AUTHOR
+Damien Graux
+.br
+Tyrex Group (Inria France)
+.br
+<http://tyrex.inria.fr>
