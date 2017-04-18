@@ -23,6 +23,9 @@ will then generate a scenario divided into several steps to benchmark
 an RDF storage system allowing the SPARQL evaluation on the various
 functionalities of the SPARQL UPDATE standard extension.
 
+To have an idea of what is going one, you can run `bash example.sh`
+and get a very basic scenario.
+
 A basic man page is also available: `man ./manual.troff` and more
 details are written in `details.txt`.
 
