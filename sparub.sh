@@ -3,9 +3,16 @@
 PATH_CMD=$(dirname $0)
 PQ="0"
 MaxTripleNumber=10000
+OUTPATH="."
 case "$1" in
     --print-query | -p )
 	PQ="1"
+	shift
+	;;
+    -o )
+	shift
+	OUTPATH="$1"
+	if [ ! -d $OUTPATH ]; then mkdir $OUTPATH ; fi
 	shift
 	;;
     --max-triple-number )
@@ -14,21 +21,21 @@ case "$1" in
 	shift
 	;;
     --help | -h )
-	echo "Usage: bash $0 [[--help | -h]|[--print-query | -p]|[--max-triple-number 1234]] path/to/dataset.nt [path/to/query.rq ... ]"
+	echo "Usage: bash $0 [[--help | -h]|[--print-query | -p]|[-o out_path/]|[--max-triple-number 1234]] path/to/dataset.nt [path/to/query.rq ... ]"
 	exit 0
 	;;
 esac
 
 if [[ $# -lt 1 ]];
 then
-    echo "Usage: bash $0 [[--help | -h]|[--print-query | -p]|[--max-triple-number 1234]] path/to/dataset.nt [path/to/query.rq ... ]"
+    echo "Usage: bash $0 [[--help | -h]|[--print-query | -p]|[-o out_path/]|[--max-triple-number 1234]] path/to/dataset.nt [path/to/query.rq ... ]"
     exit 1
 fi
 
 dataset=$1 ; shift # The 'shift' to reach the query paths…
 
-if [ ! -d "./sparub-benchmark/" ]; then
-    mkdir ./sparub-benchmark/
+if [ ! -d "$OUTPATH/sparub-benchmark/" ]; then
+    mkdir $OUTPATH/sparub-benchmark/
 fi
 
 ### Various Counters.
@@ -98,20 +105,21 @@ then
     exit 1
 fi
 echo -e "$nbstep. Creation of whole the needed graphs." ; nbstep=$(($nbstep+1))
-echo -e "CREATE GRAPH <http://tyrex.inria.fr/sparub/reference>" > ./sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
-echo -e "CREATE GRAPH <http://tyrex.inria.fr/sparub/fullGraph>" > ./sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
-echo -e "CREATE GRAPH <http://tyrex.inria.fr/sparub/emptyGraph>" > ./sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+echo -e "CREATE GRAPH <http://tyrex.inria.fr/sparub/reference>" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+echo -e "CREATE GRAPH <http://tyrex.inria.fr/sparub/fullGraph>" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+echo -e "CREATE GRAPH <http://tyrex.inria.fr/sparub/emptyGraph>" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
 echo -e "-->Run queries from q$bufquery.rq to q$((nbquery-1)).rq" ; bufquery=$nbquery
 echo -e "\n"
 
 echo -e "II/ Reference Run"
 echo -e "-----------------"
 echo -e "$nbstep. Run the initial benchmark to have reference times." ; nbstep=$(($nbstep+1))
-echo -e "LOAD $dataset INTO GRAPH <http://tyrex.inria.fr/sparub/reference>" > ./sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+echo -e "LOAD $dataset INTO GRAPH <http://tyrex.inria.fr/sparub/reference>" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
 for i in $@ ; do
-    cp $i ./sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+    cp $i $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
 done
 echo -e "-->Run queries from q$bufquery.rq to q$((nbquery-1)).rq" ; bufquery=$nbquery
+echo -e "Notice that you might add a 'FROM' clause in the SPARQL queries to specify the queried graph."
 echo -e "\n"
 
 echo -e "III/ Inserting and deleting pieces of data (and checking results)"
@@ -121,22 +129,22 @@ TwentyTriple=$(head -n 20 $dataset | awk '{print "\t",$0}')
 FHTriple=$(head -n 500 $dataset | awk '{print "\t",$0}')
 TenPerTriple=$(head -n $(($NbTriples/10)) $dataset | awk '{print "\t",$0}')
 echo -e "$nbstep. Copying the reference graph." ; nbstep=$(($nbstep+1))
-echo -e "COPY GRAPH <http://tyrex.inria.fr/sparub/reference> TO GRAPH <http://tyrex.inria.fr/sparub/fullGraph>" > ./sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+echo -e "COPY GRAPH <http://tyrex.inria.fr/sparub/reference> TO GRAPH <http://tyrex.inria.fr/sparub/fullGraph>" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
 echo -e "$nbstep. Dealing with one triple." ; nbstep=$(($nbstep+1))
-echo -e "INSERT DATA { GRAPH <http://tyrex.inria.fr/sparub/emptyGraph> { \n$OneTriple\n} }" > ./sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
-echo -e "DELETE DATA { GRAPH <http://tyrex.inria.fr/sparub/emptyGraph> { \n$OneTriple\n} }" > ./sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+echo -e "INSERT DATA { GRAPH <http://tyrex.inria.fr/sparub/emptyGraph> { \n$OneTriple\n} }" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+echo -e "DELETE DATA { GRAPH <http://tyrex.inria.fr/sparub/emptyGraph> { \n$OneTriple\n} }" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
 echo -e "$nbstep. Dealing with twenty triples. (i.e. ≈$(echo "scale=2; (20*100)/$NbTriples" | bc -l)%)" ; nbstep=$(($nbstep+1))
-echo -e "INSERT DATA { GRAPH <http://tyrex.inria.fr/sparub/emptyGraph> { \n$TwentyTriple\n} }" > ./sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
-echo -e "DELETE DATA { GRAPH <http://tyrex.inria.fr/sparub/emptyGraph> { \n$TwentyTriple\n} }" > ./sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+echo -e "INSERT DATA { GRAPH <http://tyrex.inria.fr/sparub/emptyGraph> { \n$TwentyTriple\n} }" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+echo -e "DELETE DATA { GRAPH <http://tyrex.inria.fr/sparub/emptyGraph> { \n$TwentyTriple\n} }" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
 echo -e "$nbstep. Dealing with 500 triples. (i.e. ≈$(echo "scale=2; (500*100)/$NbTriples" | bc -l)%)" ; nbstep=$(($nbstep+1))
-echo -e "INSERT DATA { GRAPH <http://tyrex.inria.fr/sparub/emptyGraph> { \n$FHTriple\n} }" > ./sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
-echo -e "DELETE DATA { GRAPH <http://tyrex.inria.fr/sparub/emptyGraph> { \n$FHTriple\n} }" > ./sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+echo -e "INSERT DATA { GRAPH <http://tyrex.inria.fr/sparub/emptyGraph> { \n$FHTriple\n} }" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+echo -e "DELETE DATA { GRAPH <http://tyrex.inria.fr/sparub/emptyGraph> { \n$FHTriple\n} }" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
 echo -e "$nbstep. Dealing with $(($NbTriples/10)) triples. (i.e. ≈10%)" ; nbstep=$(($nbstep+1))
-echo -e "INSERT DATA { GRAPH <http://tyrex.inria.fr/sparub/emptyGraph> { \n$TenPerTriple\n} }" > ./sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
-echo -e "DELETE DATA { GRAPH <http://tyrex.inria.fr/sparub/emptyGraph> { \n$TenPerTriple\n} }" > ./sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+echo -e "INSERT DATA { GRAPH <http://tyrex.inria.fr/sparub/emptyGraph> { \n$TenPerTriple\n} }" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+echo -e "DELETE DATA { GRAPH <http://tyrex.inria.fr/sparub/emptyGraph> { \n$TenPerTriple\n} }" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
 echo -e "$nbstep. Stress insertion..." ; nbstep=$(($nbstep+1))
 for i in $(seq 0 19); do
-    echo -e "INSERT DATA { GRAPH <http://tyrex.inria.fr/sparub/emptyGraph> { \n$(echo "$TwentyTriple" | tail -n $((20-$i)) | head -n 1)\n} }" > ./sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+    echo -e "INSERT DATA { GRAPH <http://tyrex.inria.fr/sparub/emptyGraph> { \n$(echo "$TwentyTriple" | tail -n $((20-$i)) | head -n 1)\n} }" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
 done
 echo -e "-->Run queries from q$bufquery.rq to q$((nbquery-1)).rq" ; bufquery=$nbquery
 echo -e "\n"
@@ -146,9 +154,9 @@ echo -e "------------------------------------------"
 DistPred=$(awk '{a[$2]+=1}END{for( key in a) print a[key],key}' $dataset | sort -nr | head -n 1 | awk '{print $2}')
 DistPredObj=$(awk '{a[$2," ",$3]+=1}END{for( key in a) print a[key],key}' $dataset | sort -nr | head -n 1 | awk '{print $2,$3}')
 echo -e "$nbstep. Deleting triples dealing with the most common predicate." ; nbstep=$(($nbstep+1))
-echo -e "WITH <http://tyrex.inria.fr/sparub/fullGraph>\nDELETE ?s $DistPred ?o WHERE {\n\t?s $DistPred ?o .\n}" > ./sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+echo -e "WITH <http://tyrex.inria.fr/sparub/fullGraph>\nDELETE ?s $DistPred ?o WHERE {\n\t?s $DistPred ?o .\n}" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
 echo -e "$nbstep. Moving the triples related to the most represented couple (pred,obj)." ; nbstep=$(($nbstep+1))
-echo -e "WITH <http://tyrex.inria.fr/sparub/fullGraph>\nDELETE ?s ?p ?o WHERE {\n\t?s $DistPredObj .\n\t?s ?p ?o .\n}" > ./sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+echo -e "WITH <http://tyrex.inria.fr/sparub/fullGraph>\nDELETE ?s ?p ?o WHERE {\n\t?s $DistPredObj .\n\t?s ?p ?o .\n}" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
 #echo -e "$nbstep. Renaming a list of elements" ; nbstep=$(($nbstep+1))
 echo -e "-->Run queries from q$bufquery.rq to q$((nbquery-1)).rq" ; bufquery=$nbquery
 echo -e "\n"
@@ -167,48 +175,48 @@ then
     echo -e "\$MaxTripleNumber was larger that the dataset set size, so:"
 fi
 echo -e "(\$MaxTripleNumber=$MaxTripleNumber)"
-head -n $MaxTripleNumber $dataset > ./sparub-benchmark/dataset-100.nt
-head -n $(($MaxTripleNumber/100)) ./sparub-benchmark/dataset-100.nt > ./sparub-benchmark/dataset-1.nt
-tail -n $(($MaxTripleNumber - $MaxTripleNumber/100)) ./sparub-benchmark/dataset-100.nt > ./sparub-benchmark/dataset-99.nt
-head -n $(($MaxTripleNumber/10)) ./sparub-benchmark/dataset-100.nt > ./sparub-benchmark/dataset-10.nt
-tail -n $(($MaxTripleNumber - $MaxTripleNumber/10)) ./sparub-benchmark/dataset-100.nt > ./sparub-benchmark/dataset-90.nt
-head -n $(($MaxTripleNumber/4)) ./sparub-benchmark/dataset-100.nt > ./sparub-benchmark/dataset-25.nt
-tail -n $(($MaxTripleNumber - $MaxTripleNumber/4)) ./sparub-benchmark/dataset-100.nt > ./sparub-benchmark/dataset-75.nt
-head -n $(($MaxTripleNumber/2)) ./sparub-benchmark/dataset-100.nt > ./sparub-benchmark/dataset-50.nt
-head -n $(($MaxTripleNumber/4)) ./sparub-benchmark/dataset-100.nt > ./sparub-benchmark/dataset-25.nt
-tail -n $(($MaxTripleNumber - $MaxTripleNumber/4)) ./sparub-benchmark/dataset-100.nt > ./sparub-benchmark/dataset-75.nt
-head -n $(($MaxTripleNumber*4/5)) ./sparub-benchmark/dataset-100.nt > ./sparub-benchmark/dataset-80.nt
-tail -n $(($MaxTripleNumber - $MaxTripleNumber*4/5)) ./sparub-benchmark/dataset-100.nt > ./sparub-benchmark/dataset-20.nt
+head -n $MaxTripleNumber $dataset > $OUTPATH/sparub-benchmark/dataset-100.nt
+head -n $(($MaxTripleNumber/100)) $OUTPATH/sparub-benchmark/dataset-100.nt > $OUTPATH/sparub-benchmark/dataset-1.nt
+tail -n $(($MaxTripleNumber - $MaxTripleNumber/100)) $OUTPATH/sparub-benchmark/dataset-100.nt > $OUTPATH/sparub-benchmark/dataset-99.nt
+head -n $(($MaxTripleNumber/10)) $OUTPATH/sparub-benchmark/dataset-100.nt > $OUTPATH/sparub-benchmark/dataset-10.nt
+tail -n $(($MaxTripleNumber - $MaxTripleNumber/10)) $OUTPATH/sparub-benchmark/dataset-100.nt > $OUTPATH/sparub-benchmark/dataset-90.nt
+head -n $(($MaxTripleNumber/4)) $OUTPATH/sparub-benchmark/dataset-100.nt > $OUTPATH/sparub-benchmark/dataset-25.nt
+tail -n $(($MaxTripleNumber - $MaxTripleNumber/4)) $OUTPATH/sparub-benchmark/dataset-100.nt > $OUTPATH/sparub-benchmark/dataset-75.nt
+head -n $(($MaxTripleNumber/2)) $OUTPATH/sparub-benchmark/dataset-100.nt > $OUTPATH/sparub-benchmark/dataset-50.nt
+head -n $(($MaxTripleNumber/4)) $OUTPATH/sparub-benchmark/dataset-100.nt > $OUTPATH/sparub-benchmark/dataset-25.nt
+tail -n $(($MaxTripleNumber - $MaxTripleNumber/4)) $OUTPATH/sparub-benchmark/dataset-100.nt > $OUTPATH/sparub-benchmark/dataset-75.nt
+head -n $(($MaxTripleNumber*4/5)) $OUTPATH/sparub-benchmark/dataset-100.nt > $OUTPATH/sparub-benchmark/dataset-80.nt
+tail -n $(($MaxTripleNumber - $MaxTripleNumber*4/5)) $OUTPATH/sparub-benchmark/dataset-100.nt > $OUTPATH/sparub-benchmark/dataset-20.nt
 # Reference.
 echo -e "$nbstep. Reference time with 100% of \$MaxTripleNumber." ; nbstep=$(($nbstep+1))
-echo -e "CREATE GRAPH <http://tyrex.inria.fr/sparub/subpart>" > ./sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
-echo -e "LOAD ./sparub-benchmark/dataset-100.nt INTO GRAPH <http://tyrex.inria.fr/sparub/subpart>" > ./sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
-echo -e "CLEAR GRAPH <http://tyrex.inria.fr/sparub/subpart>" > ./sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+echo -e "CREATE GRAPH <http://tyrex.inria.fr/sparub/subpart>" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+echo -e "LOAD $OUTPATH/sparub-benchmark/dataset-100.nt INTO GRAPH <http://tyrex.inria.fr/sparub/subpart>" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+echo -e "CLEAR GRAPH <http://tyrex.inria.fr/sparub/subpart>" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
 # 1% update.
 echo -e "$nbstep. With 1% of \$MaxTripleNumber. (i.e. $(($MaxTripleNumber/100)))" ; nbstep=$(($nbstep+1))
-echo -e "LOAD ./sparub-benchmark/dataset-99.nt INTO GRAPH <http://tyrex.inria.fr/sparub/subpart>" > ./sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
-echo -e "LOAD ./sparub-benchmark/dataset-1.nt INTO GRAPH <http://tyrex.inria.fr/sparub/subpart>" > ./sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
-echo -e "CLEAR GRAPH <http://tyrex.inria.fr/sparub/subpart>" > ./sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+echo -e "LOAD $OUTPATH/sparub-benchmark/dataset-99.nt INTO GRAPH <http://tyrex.inria.fr/sparub/subpart>" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+echo -e "LOAD $OUTPATH/sparub-benchmark/dataset-1.nt INTO GRAPH <http://tyrex.inria.fr/sparub/subpart>" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+echo -e "CLEAR GRAPH <http://tyrex.inria.fr/sparub/subpart>" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
 # 10% update.
 echo -e "$nbstep. With 10% of \$MaxTripleNumber. (i.e. $(($MaxTripleNumber/10)))" ; nbstep=$(($nbstep+1))
-echo -e "LOAD ./sparub-benchmark/dataset-90.nt INTO GRAPH <http://tyrex.inria.fr/sparub/subpart>" > ./sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
-echo -e "LOAD ./sparub-benchmark/dataset-10.nt INTO GRAPH <http://tyrex.inria.fr/sparub/subpart>" > ./sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
-echo -e "CLEAR GRAPH <http://tyrex.inria.fr/sparub/subpart>" > ./sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+echo -e "LOAD $OUTPATH/sparub-benchmark/dataset-90.nt INTO GRAPH <http://tyrex.inria.fr/sparub/subpart>" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+echo -e "LOAD $OUTPATH/sparub-benchmark/dataset-10.nt INTO GRAPH <http://tyrex.inria.fr/sparub/subpart>" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+echo -e "CLEAR GRAPH <http://tyrex.inria.fr/sparub/subpart>" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
 # 25% update.
 echo -e "$nbstep. With 25% of \$MaxTripleNumber. (i.e. $(($MaxTripleNumber/4)))" ; nbstep=$(($nbstep+1))
-echo -e "LOAD ./sparub-benchmark/dataset-75.nt INTO GRAPH <http://tyrex.inria.fr/sparub/subpart>" > ./sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
-echo -e "LOAD ./sparub-benchmark/dataset-25.nt INTO GRAPH <http://tyrex.inria.fr/sparub/subpart>" > ./sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
-echo -e "CLEAR GRAPH <http://tyrex.inria.fr/sparub/subpart>" > ./sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+echo -e "LOAD $OUTPATH/sparub-benchmark/dataset-75.nt INTO GRAPH <http://tyrex.inria.fr/sparub/subpart>" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+echo -e "LOAD $OUTPATH/sparub-benchmark/dataset-25.nt INTO GRAPH <http://tyrex.inria.fr/sparub/subpart>" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+echo -e "CLEAR GRAPH <http://tyrex.inria.fr/sparub/subpart>" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
 # 50% update.
 echo -e "$nbstep. With 50% of \$MaxTripleNumber. (i.e. $(($MaxTripleNumber/2)))" ; nbstep=$(($nbstep+1))
-echo -e "LOAD ./sparub-benchmark/dataset-50.nt INTO GRAPH <http://tyrex.inria.fr/sparub/subpart>" > ./sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
-echo -e "LOAD ./sparub-benchmark/dataset-50.nt INTO GRAPH <http://tyrex.inria.fr/sparub/subpart>" > ./sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
-echo -e "CLEAR GRAPH <http://tyrex.inria.fr/sparub/subpart>" > ./sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+echo -e "LOAD $OUTPATH/sparub-benchmark/dataset-50.nt INTO GRAPH <http://tyrex.inria.fr/sparub/subpart>" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+echo -e "LOAD $OUTPATH/sparub-benchmark/dataset-50.nt INTO GRAPH <http://tyrex.inria.fr/sparub/subpart>" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+echo -e "CLEAR GRAPH <http://tyrex.inria.fr/sparub/subpart>" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
 # 80% update.
 echo -e "$nbstep. With 80% of \$MaxTripleNumber. (i.e. $(($MaxTripleNumber*4/5)))" ; nbstep=$(($nbstep+1))
-echo -e "LOAD ./sparub-benchmark/dataset-20.nt INTO GRAPH <http://tyrex.inria.fr/sparub/subpart>" > ./sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
-echo -e "LOAD ./sparub-benchmark/dataset-80.nt INTO GRAPH <http://tyrex.inria.fr/sparub/subpart>" > ./sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
-echo -e "CLEAR GRAPH <http://tyrex.inria.fr/sparub/subpart>" > ./sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+echo -e "LOAD $OUTPATH/sparub-benchmark/dataset-20.nt INTO GRAPH <http://tyrex.inria.fr/sparub/subpart>" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+echo -e "LOAD $OUTPATH/sparub-benchmark/dataset-80.nt INTO GRAPH <http://tyrex.inria.fr/sparub/subpart>" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+echo -e "CLEAR GRAPH <http://tyrex.inria.fr/sparub/subpart>" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
 echo -e "-->Run queries from q$bufquery.rq to q$((nbquery-1)).rq" ; bufquery=$nbquery
 echo -e "\n"
 
@@ -222,16 +230,16 @@ then
 	for j in $(echo "2 30 400"); do
 	    for k in $(seq 1 $j); do
 		BGPtoTriples $k $(cat $i) ;
-	    done > ./sparub-benchmark/triples-$(basename "$i")-$j.nt ;
+	    done > $OUTPATH/sparub-benchmark/triples-$(basename "$i")-$j.nt ;
 	done & # To speed up the process.
 	# Query Generation.
 	echo -e "$nbstep. Generating a scenario with [$i]."
 	for j in $(echo "2 30 400"); do
 	    nbsubstep=1
 	    echo -e "    $nbstep-$nbsubstep. Adding $j sets of solutions."
-	    echo -e "       Add ./sparub-benchmark/triples-$(basename "$i")-$j.nt"
+	    echo -e "       Add $OUTPATH/sparub-benchmark/triples-$(basename "$i")-$j.nt"
 	    echo -e "       Evaluate $i"
-	    echo -e "       Remove ./sparub-benchmark/triples-$(basename "$i")-$j.nt"
+	    echo -e "       Remove $OUTPATH/sparub-benchmark/triples-$(basename "$i")-$j.nt"
 	    nbsubstep=$(($nbsubstep+1))
 	done
 	nbstep=$(($nbstep+1))
@@ -252,14 +260,14 @@ echo -e "------------------------"
 # 3. We add emptygraph to fullgraph.
 # => At the end reference, full graph and emptygraph should be the same.
 echo -e "$nbstep. Setting up." ; nbstep=$(($nbstep+1))
-echo -e "CLEAR GRAPH <http://tyrex.inria.fr/sparub/emptyGraph>" > ./sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
-echo -e "CLEAR GRAPH <http://tyrex.inria.fr/sparub/fullGraph>" > ./sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+echo -e "CLEAR GRAPH <http://tyrex.inria.fr/sparub/emptyGraph>" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+echo -e "CLEAR GRAPH <http://tyrex.inria.fr/sparub/fullGraph>" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
 echo -e "$nbstep. COPY." ; nbstep=$(($nbstep+1))
-echo -e "COPY GRAPH <http://tyrex.inria.fr/sparub/reference> TO GRAPH <http://tyrex.inria.fr/sparub/fullGraph>" > ./sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+echo -e "COPY GRAPH <http://tyrex.inria.fr/sparub/reference> TO GRAPH <http://tyrex.inria.fr/sparub/fullGraph>" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
 echo -e "$nbstep. MOVE." ; nbstep=$(($nbstep+1))
-echo -e "MOVE GRAPH <http://tyrex.inria.fr/sparub/fullGraph> TO GRAPH <http://tyrex.inria.fr/sparub/emptyGraph>" > ./sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+echo -e "MOVE GRAPH <http://tyrex.inria.fr/sparub/fullGraph> TO GRAPH <http://tyrex.inria.fr/sparub/emptyGraph>" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
 echo -e "$nbstep. ADD." ; nbstep=$(($nbstep+1))
-echo -e "ADD GRAPH <http://tyrex.inria.fr/sparub/emptyGraph> TO GRAPH <http://tyrex.inria.fr/sparub/fullGraph>" > ./sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+echo -e "ADD GRAPH <http://tyrex.inria.fr/sparub/emptyGraph> TO GRAPH <http://tyrex.inria.fr/sparub/fullGraph>" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
 echo -e "-->Run queries from q$bufquery.rq to q$((nbquery-1)).rq" ; bufquery=$nbquery
 echo -e "[optional] Check." ;
 echo -e "Run the following SPARQL query on the three graph (reference,"
@@ -270,15 +278,15 @@ echo -e "\n"
 echo -e "VIII/ Cleaning everything"
 echo -e "-------------------------"
 echo -e "$nbstep. Cleaning graphs." ; nbstep=$(($nbstep+1))
-echo -e "CLEAN GRAPH <http://tyrex.inria.fr/sparub/reference>" > ./sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
-echo -e "CLEAN GRAPH <http://tyrex.inria.fr/sparub/fullGraph>" > ./sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
-echo -e "CLEAN GRAPH <http://tyrex.inria.fr/sparub/emptyGraph>" > ./sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
-echo -e "CLEAR GRAPH <http://tyrex.inria.fr/sparub/subpart>" > ./sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+echo -e "CLEAN GRAPH <http://tyrex.inria.fr/sparub/reference>" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+echo -e "CLEAN GRAPH <http://tyrex.inria.fr/sparub/fullGraph>" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+echo -e "CLEAN GRAPH <http://tyrex.inria.fr/sparub/emptyGraph>" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+echo -e "CLEAR GRAPH <http://tyrex.inria.fr/sparub/subpart>" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
 echo -e "$nbstep. Dropping graphs." ; nbstep=$(($nbstep+1))
-echo -e "DROP GRAPH <http://tyrex.inria.fr/sparub/reference>" > ./sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
-echo -e "DROP GRAPH <http://tyrex.inria.fr/sparub/fullGraph>" > ./sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
-echo -e "DROP GRAPH <http://tyrex.inria.fr/sparub/emptyGraph>" > ./sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
-echo -e "DROP GRAPH <http://tyrex.inria.fr/sparub/subpart>" > ./sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+echo -e "DROP GRAPH <http://tyrex.inria.fr/sparub/reference>" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+echo -e "DROP GRAPH <http://tyrex.inria.fr/sparub/fullGraph>" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+echo -e "DROP GRAPH <http://tyrex.inria.fr/sparub/emptyGraph>" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+echo -e "DROP GRAPH <http://tyrex.inria.fr/sparub/subpart>" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
 echo -e "--> Run queries from q$bufquery.rq to q$((nbquery-1)).rq" ; bufquery=$nbquery
 echo -e "\n"
 
@@ -287,20 +295,20 @@ then
     echo "Printing (one at a time) the generated queries:"
     for i in $(seq 1 $(($nbquery-1))); do
 	echo ">>> q$i.rq <<<"
-	if [[ $(cat ./sparub-benchmark/q$i.rq | wc -l) -ge 13 ]];
+	if [[ $(cat $OUTPATH/sparub-benchmark/q$i.rq | wc -l) -ge 13 ]];
 	then
-	    head -n 10 ./sparub-benchmark/q$i.rq
+	    head -n 10 $OUTPATH/sparub-benchmark/q$i.rq
 	    echo -e "\t[. . .]"
 	else
-	    cat ./sparub-benchmark/q$i.rq
+	    cat $OUTPATH/sparub-benchmark/q$i.rq
 	fi
 	echo ""
 	read
     done
 fi
-) > ./sparub-benchmark/sparub-process.txt
+) > $OUTPATH/sparub-benchmark/sparub-process.txt
 
 echo "== SPARUB =="
-echo "Evaluation process is available in './sparub-benchmark/sparub-process.txt'"
+echo "Evaluation process is available in '$OUTPATH/sparub-benchmark/sparub-process.txt'"
 date "+DATE: %Y-%m-%d%nTIME: %T"
 exit 0

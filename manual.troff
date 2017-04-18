@@ -6,7 +6,7 @@ sparub \- generate a benchmark dedicated to SPARQL UPDATE
 
 
 .SH SYNOPSIS
-.B sparub [\-h \-p] [\fB\-\-max\-triple\-number\fR \fIBITS\fB]
+.B sparub [\-h \-p] [\fB\-o\fR \fIPATH\fB] [\fB\-\-max\-triple\-number\fR \fIBITS\fB]
 .IR dataset_file
 .B [
 .IR query_file 
@@ -30,6 +30,14 @@ Print the help and exit.
 .IP "\-p , \-\-print\-query"
 Print one by one the generated queries at the end of the process,
 limiting the diplay to the 10th first lines.
+
+.IP "\-o PATH"
+Set the output directory to
+.I "PATH"
+.br
+If nothing is given the default value is the current directory:
+.I "./"
+
 
 .IP "\-\-max\-triple\-number BITS"
 Set the maximum number of triples that will be involved in the step
