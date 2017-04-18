@@ -8,24 +8,20 @@ case "$1" in
 	PQ="1"
 	shift
 	;;
-    --details | -d )
-	cat ${PATH_CMD}/../details.txt
-	exit 0
-	;;
     --max-triple-number )
 	shift
 	MaxTripleNumber=$1
 	shift
 	;;
     --help | -h )
-	echo "Usage: bash $0 [[--help | -h]|[--print-query | -p]|[--details | -d]|[--max-triple-number 1234]] path/to/dataset.nt [path/to/query.rq ... ]"
+	echo "Usage: bash $0 [[--help | -h]|[--print-query | -p]|[--max-triple-number 1234]] path/to/dataset.nt [path/to/query.rq ... ]"
 	exit 0
 	;;
 esac
 
 if [[ $# -lt 1 ]];
 then
-    echo "Usage: bash $0 [[--help | -h]|[--print-query | -p]|[--details | -d]|[--max-triple-number 1234]] path/to/dataset.nt [path/to/query.rq ... ]"
+    echo "Usage: bash $0 [[--help | -h]|[--print-query | -p]|[--max-triple-number 1234]] path/to/dataset.nt [path/to/query.rq ... ]"
     exit 1
 fi
 
@@ -229,7 +225,7 @@ then
 	    done > ./sparub-benchmark/triples-$(basename "$i")-$j.nt ;
 	done & # To speed up the process.
 	# Query Generation.
-	echo -e "$nbstep. Generating a scenario around [$i]."
+	echo -e "$nbstep. Generating a scenario with [$i]."
 	for j in $(echo "2 30 400"); do
 	    nbsubstep=1
 	    echo -e "    $nbstep-$nbsubstep. Adding $j sets of solutions."
