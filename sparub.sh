@@ -278,9 +278,9 @@ echo -e "\n"
 echo -e "VIII/ Cleaning everything"
 echo -e "-------------------------"
 echo -e "$nbstep. Cleaning graphs." ; nbstep=$(($nbstep+1))
-echo -e "CLEAN GRAPH <http://tyrex.inria.fr/sparub/reference>" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
-echo -e "CLEAN GRAPH <http://tyrex.inria.fr/sparub/fullGraph>" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
-echo -e "CLEAN GRAPH <http://tyrex.inria.fr/sparub/emptyGraph>" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+echo -e "CLEAR GRAPH <http://tyrex.inria.fr/sparub/reference>" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+echo -e "CLEAR GRAPH <http://tyrex.inria.fr/sparub/fullGraph>" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
+echo -e "CLEAR GRAPH <http://tyrex.inria.fr/sparub/emptyGraph>" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
 echo -e "CLEAR GRAPH <http://tyrex.inria.fr/sparub/subpart>" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
 echo -e "$nbstep. Dropping graphs." ; nbstep=$(($nbstep+1))
 echo -e "DROP GRAPH <http://tyrex.inria.fr/sparub/reference>" > $OUTPATH/sparub-benchmark/q$nbquery.rq ; nbquery=$(($nbquery+1))
