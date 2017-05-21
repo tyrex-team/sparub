@@ -24,7 +24,12 @@ an RDF storage system allowing the SPARQL evaluation on the various
 functionalities of the SPARQL UPDATE standard extension.
 
 To have an idea of what is going one, you can run `bash example.sh`
-and get a very basic scenario.
+and get a very basic scenario. Furthermore, a complete testing
+environment is also available under a reproducible context thanks to
+[docker](https://www.docker.com/): an image (see `Dockerfile`) can
+be built with `docker build -t sparub .` and then run (with various
+pre-installed state-of-the-art evaluators and popular benchmarks) with
+`docker run -it sparub`.
 
 A basic man page is also available: `man ./manual.troff` and more
 details are written in `details.txt`.

@@ -43,9 +43,9 @@ Concept of SPARUB
 The idea of SPARUB is to extend all the existing RDF/SPARQL benchmarks
 i.e. keeping the already run test suite and giving new scenarios
 involving dynamicity of data. To do that, SPARUB takes as inputs an
-RDF dataset (N-Triples format to be easily parsed) and a list of
-SPARQL queries. It then returns a set of RDF files and a testing
-scenario (and also some logs…).
+RDF dataset (N-Triples format to be easily parsed) and an optional
+list of SPARQL queries. It then returns a set of RDF files, lots of
+SPARQL queries and a testing scenario (and also some logs…).
 
 Technically, SPARUB starts by analyzing the various SPARQL queries in
 order to list the used SPARQL keywords and thus having an idea of the
